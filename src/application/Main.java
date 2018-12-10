@@ -1,5 +1,8 @@
 package application;
 	
+import java.awt.Button;
+import java.awt.Font;
+import java.awt.TextArea;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -10,6 +13,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
@@ -92,6 +97,34 @@ public class Main extends Application {
 	//UI를 생성하고, 실질적으로 프로그램을 동작시킨느 메소드입니다.
 	@Override
 	public void start(Stage primaryStage) {
+		BorderPane root = new BorderPane();
+		root.setPadding(new Insets(5));
+		
+		javafx.scene.control.TextArea textArea = new javafx.scene.control.TextArea();
+		textArea.setEditable(false);
+		textArea.setFont(new javafx.scene.text.Font("Serif", 15));
+		root.setCenter(textArea);
+		
+		
+		
+		javafx.scene.control.Button toggleButton = new javafx.scene.control.Button();
+		toggleButton.setMaxWidth(Double.MAX_VALUE);
+		BorderPane.setMargin(toggleButton, new Insets(1,0,0,0));
+		root.setBottom(toggleButton);
+		
+		String IP = "127.0.0.1";
+		int port = 9876;
+		
+		toggleButton.setOnAction(event ->{
+			if(toggleButton.getText().equals("시작하기")) {
+				startServer(IP, port);
+				Platform.runLater(()->{
+					String messege = String.format("[서버 시작]\n", IP, port);
+				});
+			}
+		});
+		
+		
 		
 	}
 	
