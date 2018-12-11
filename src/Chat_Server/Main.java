@@ -1,4 +1,4 @@
-package application;
+package Chat_Server;
 	
 import java.awt.Button;
 import java.awt.Font;
@@ -107,7 +107,7 @@ public class Main extends Application {
 		
 		
 		
-		javafx.scene.control.Button toggleButton = new javafx.scene.control.Button();
+		javafx.scene.control.Button toggleButton = new javafx.scene.control.Button("시작하기");
 		toggleButton.setMaxWidth(Double.MAX_VALUE);
 		BorderPane.setMargin(toggleButton, new Insets(1,0,0,0));
 		root.setBottom(toggleButton);
@@ -120,9 +120,25 @@ public class Main extends Application {
 				startServer(IP, port);
 				Platform.runLater(()->{
 					String messege = String.format("[서버 시작]\n", IP, port);
+					textArea.appendText(messege);
+					toggleButton.setText("종료하기");
+					
+				});
+			}else {
+				stopServer();
+				Platform.runLater(()->{
+					String messege = String.format("[서버 종료]\n", IP, port);
+					textArea.appendText(messege);
+					toggleButton.setText("시작하기");
 				});
 			}
 		});
+		
+		Scene scene = new Scene(root , 400, 400);
+		primaryStage.setTitle("[채팅 서버]");
+		primaryStage.setOnCloseRequest(event ->{stopServer();}); //종료 버튼을 눌렀다면
+		primaryStage.setScene(scene); //씬을 적용
+		primaryStage.show();
 		
 		
 		

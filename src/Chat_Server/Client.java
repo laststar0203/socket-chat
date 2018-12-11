@@ -1,4 +1,4 @@
-package application;
+package Chat_Server;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,12 +26,14 @@ public class Client {
 						InputStream in = socket.getInputStream();
 						byte[] buffer = new byte[512];
 						int length = in.read(buffer); //read함수를 통해 전달을 받음
-						while(length == -1) throw new IOException();
+						
+						if(length == -1) throw new IOException();
 						System.out.println("[메시지 수신 성공] "
 								+socket.getRemoteSocketAddress()
-								+" : "+Thread.currentThread().getName()); //메시지를 보낸 클라이언트 주소
+								+" : "+Thread.currentThread().getName() ); //메시지를 보낸 클라이언트 주소
 						String messege = new String(buffer, 0, length, "UTF-8");
 						for (Client client : Main.clients) {
+						
 							client.send(messege);
 						}
 					}
@@ -60,6 +62,7 @@ public class Client {
 				try {
 					OutputStream out = socket.getOutputStream();
 					byte[] buffer = messeage.getBytes("UTF-8");
+					
 					out.write(buffer);
 					out.flush();
 				
@@ -81,7 +84,7 @@ public class Client {
 				
 			}
 		};
-		
+		Main.threadPool.submit(thread); //쓰레드를 쓰레드풀에 저장
 	}
 
 }
