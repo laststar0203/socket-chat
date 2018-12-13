@@ -86,5 +86,7 @@ public class Client {
 		};
 		Main.threadPool.submit(thread); //쓰레드를 쓰레드풀에 저장
 	}
+	
+	
 
 }
