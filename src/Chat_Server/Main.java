@@ -101,7 +101,7 @@ public class Main extends Application {
 		root.setPadding(new Insets(5));
 		
 		javafx.scene.control.TextArea textArea = new javafx.scene.control.TextArea();
-		textArea.setEditable(false);
+		textArea.setEditable(false); //글을 쓸 수 없게 함
 		textArea.setFont(new javafx.scene.text.Font("Serif", 15));
 		root.setCenter(textArea);
 		
