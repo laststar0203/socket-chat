@@ -8,29 +8,29 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.BrokenBarrierException;
 
 import javax.xml.ws.handler.MessageContext;
 
-enum Info {
-	PREFIX, NICKNAME
-};
-
-enum SendMessageType{
-	SERVER , CHAT , ERROR
+enum SendMessageType {
+	SERVER, CHAT, ERROR
 };
 
 public class Client {
 
 	Socket socket;
-	String nickName;
+	String nickName = "";
+	String prefix = "";
 	String serverSendMessage = "";
+	Command command;
 
 	public Client(Socket socket, String nickName) {
 		this.socket = socket;
 		this.nickName = nickName;
+		command = new Command(this);
 
 		receive();
 	}
@@ -54,9 +54,12 @@ public class Client {
 
 						if (action.equals("/"))
 							command(mesage.substring(1));
-						else
-							broadcastMessage(mesage , SendMessageType.CHAT);
-
+						else {
+							if (prefix.equals(""))
+								broadcastMessage(nickName + " : " + mesage, SendMessageType.CHAT);
+							else
+								broadcastMessage("[" + prefix + "] " + nickName + " : " + mesage, SendMessageType.CHAT);
+						}
 						/*
 						 * String messege = new String(buffer, 0, length, "UTF-8"); for (Client client :
 						 * Main.clients) { client.send }
@@ -65,6 +68,7 @@ public class Client {
 
 				} catch (Exception e) {
 					// TODO: handle exception
+					e.printStackTrace();
 				}
 			}
 
@@ -78,38 +82,33 @@ public class Client {
 		try {
 			String comdline1 = tokenizer.nextToken();
 
-			switch (Command.switchCommand(comdline1, tokenizer, serverSendMessage, this)) {
+			switch (this.command.switchCommand(comdline1, tokenizer, serverSendMessage)) {
 			case BROADCAST:
 
-				broadcastMessage(serverSendMessage , SendMessageType.SERVER);
+				broadcastMessage(serverSendMessage, SendMessageType.SERVER);
 				break;
 			case PERSONAL:
 
-				personalMessage(serverSendMessage , SendMessageType.SERVER);
+				personalMessage(serverSendMessage, SendMessageType.SERVER);
 				break;
-			default:
-				personalMessage(serverSendMessage , SendMessageType.ERROR);
+			case NONE:
+
+				personalMessage(serverSendMessage, SendMessageType.ERROR);
 				break;
 			}
 
 			// sendMessage(serverSendMessage);
-
+		} catch (NoSuchElementException nse) {
+			
+			personalMessage("명령어가 제대로 입력되지 않았습니다", SendMessageType.ERROR);
 		} catch (Exception e) {
-			// TODO: handle exception
-			try {
-
-			} catch (NullPointerException e2) {
-				personalMessage("명령어가 제대로 입력되지 않았습니다" , SendMessageType.ERROR);
-				// TODO: handle exception
-			} catch (Exception e3) {
-				personalMessage("송신할 명령어를 분석하는 과정에서 알수없는 오류가 발생하였습니다" , SendMessageType.ERROR);
-			}
+			
+			e.printStackTrace();
+			personalMessage("송신할 명령어를 분석하는 과정에서 알수없는 오류가 발생하였습니다", SendMessageType.ERROR);
 		}
-
 	}
-	
 
-	private void personalMessage(String message , SendMessageType type) {
+	private void personalMessage(String message, SendMessageType type) {
 
 		Runnable thread = new Runnable() {
 
@@ -122,10 +121,10 @@ public class Client {
 				try {
 					switch (type) {
 					case SERVER:
-						Main.users.get(nickName).writeUTF("&"+message);
+						Main.users.get(nickName).writeUTF("&" + message);
 						break;
 					case ERROR:
-						Main.users.get(nickName).writeUTF("#"+message);
+						Main.users.get(nickName).writeUTF("#" + message);
 						break;
 					}
 					Main.users.get(nickName).flush();
@@ -139,7 +138,7 @@ public class Client {
 
 	}
 
-	public static void broadcastMessage(String message , SendMessageType type) {
+	public void broadcastMessage(String message, SendMessageType type) {
 
 		Runnable thread = new Runnable() {
 
@@ -151,16 +150,20 @@ public class Client {
 				while (i.hasNext()) {
 					try {
 						String key = i.next();
-						
+
 						switch (type) {
 						case SERVER:
-							Main.users.get(key).writeUTF("&"+message);
+							Main.users.get(key).writeUTF("&" + message);
 							break;
 
-						default:
+						case CHAT:
 							Main.users.get(key).writeUTF(message);
 							break;
+						case ERROR:
+							Main.users.get(key).writeUTF("#" + message);
+							break;
 						}
+
 						Main.users.get(key).flush();
 					} catch (IOException e) {
 						// TODO Auto-generated catch block

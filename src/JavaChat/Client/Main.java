@@ -2,6 +2,7 @@ package JavaChat.Client;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.util.StringTokenizer;
 
@@ -25,7 +26,7 @@ public class Main extends Application {
 	TextArea textArea;
 	DataOutputStream out;
 	ReceiveCommand command;
-	String sendMessage;
+	
 
 	String prefix = "";
 	String nickName = "";
@@ -45,14 +46,21 @@ public class Main extends Application {
 					out.flush();
 
 					receive();
-
+				} catch (ConnectException ce) {
+					
+					
+					textArea.appendText("[서버 접속 실패] 서버가 닫혀있습니다.  \n");
+					
+					
 				} catch (Exception e) {
 					// TODO: handle exception
-					if (!socket.isClosed()) {
+					
+					if (socket != null && !socket.isClosed()) {
+						textArea.appendText("[서버 접속 실패] 알수 없는 오류로 접속이 실패하였습니다.");
 						stopClient();
-						System.out.println("[서버 접속 실패]");
 						Platform.exit();
 					}
+		
 				}
 
 			};
@@ -68,20 +76,12 @@ public class Main extends Application {
 
 				DataInputStream in = new DataInputStream(socket.getInputStream());
 				String receiveMessage = in.readUTF();
-				switch (command.checkCommand(receiveMessage)) {
 				
-				case CHAT:
-					
-					if(prefix.equals("")) sendMessage = nickName + " : "+receiveMessage + "\n";
-					else sendMessage = "["+prefix+"] "+nickName + " : "+receiveMessage + "\n";
-					break;
-
-				default:
-					break;
-				}
-
+				
+				System.out.println("Client receive : "+receiveMessage);
+				
 				Platform.runLater(() -> {
-					textArea.appendText(sendMessage);
+					textArea.appendText(command.checkCommand(receiveMessage));
 				});
 
 			} catch (Exception e) {
@@ -176,7 +176,7 @@ public class Main extends Application {
 				}
 				startClient(serverIP.getText().toString(), port, thField.getText().toString());
 				Platform.runLater(() -> {
-					textArea.appendText("[채팅방 접속]\n");
+					textArea.appendText("[채팅방 접속 요청중]\n");
 
 				});
 
